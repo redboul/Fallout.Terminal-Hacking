@@ -13,7 +13,7 @@ var Count = 12;
 var Difficulty = 7;
 var DudLength = 8;
 var Sound = true;
-var InfoText = "ROBCO INDUSTRIES (TM) TERMALINK PROTOCOL<br />ENTER PASSWORD NOW";
+var InfoText = "ROBCO INDUSTRIES (TM) TERMALINK PROTOCOL<br />ENTRER LE MOT DE PASSE";
 var Haikus = [
 	"Out of memory.<br />We wish to hold the whole sky,<br />But we never will.",
 	"Three things are certain:<br />Death, taxes, and lost data.<br />Guess which has occurred.",
@@ -61,10 +61,7 @@ var gchars =
 
 Start = function()
 {
-	$.get("robco-industries/ajax/wordlist.php", {
-		length: Difficulty,
-		count: Count
-	}, WordCallback);
+	$.get("robco-industries/ajax/wordlist.json", WordCallback);
 }
 
 $(window).on("load", function() {
@@ -116,7 +113,7 @@ PopulateScreen = function()
 
 UpdateAttempts = function()
 {
-	var AttemptString = AttemptsRemaining + " ATTEMPT(S) LEFT: ";
+	var AttemptString = AttemptsRemaining + " ESSAI(S) RESTANT: ";
 	JTypeFill("attempts", AttemptString, 20, function(){
 		var i = 0;
 		while (i < AttemptsRemaining)
@@ -182,9 +179,14 @@ JTypeFill = function(containerID, text, TypeSpeed, callback, TypeCharacter, Pref
 
 WordCallback = function(Response)
 {
-	Words = JSON.parse(Response).words;
-	Correct = Words[0];
-	Words = Shuffle(Words);
+	Words = Response.words;
+	var selectedWords = [];
+	for (var i = 0; i < Count; i++) {
+		selectedWords = selectedWords.concat(Words.splice(_.random(0, Words.length - 2, false), 1));
+	}
+	Correct = selectedWords[0];
+	Words = Shuffle(selectedWords);
+	console.log(Correct)
 	FillWordColumns();
 }
 
@@ -285,10 +287,10 @@ SetupInteractions = function(column)
 				if (Sound)
 					$("#passgood")[0].play();
 				UpdateOutput("");
-				UpdateOutput("Exact match!");
-				UpdateOutput("Please wait");
-				UpdateOutput("while system");
-				UpdateOutput("is accessed.");
+				UpdateOutput("Validée!");
+				UpdateOutput("Veuillez patienter");
+				UpdateOutput("pendant l'accès ");
+				UpdateOutput("au système.");
 				AttemptsRemaining = 0;
 				Success();
 			}
@@ -296,8 +298,9 @@ SetupInteractions = function(column)
 			{
 				if (Sound)
 					$("#passbad")[0].play();
-				UpdateOutput("Access denied");
-				UpdateOutput( CompareWords(word, Correct) + "/" + Correct.length + " correct." );
+				UpdateOutput("Accès refusé");
+				UpdateOutput( CompareWords(word, Correct) + "/" + Correct.length + " bonne(s)." );
+				UpdateOutput( CompareWordsInPlace(word, Correct) + "/" + Correct.length + " placée(s)." );
 				AttemptsRemaining--;
 				UpdateAttempts();
 				if (AttemptsRemaining == 0)
@@ -386,9 +389,9 @@ HandleBraces = function(DudCap)
 
 Failure = function()
 {
-	UpdateOutput("Access denied.");
-	UpdateOutput("Lockout in");
-	UpdateOutput("progress.");
+	UpdateOutput("Accès refusé.");
+	UpdateOutput("Verrouillage");
+	UpdateOutput("en cours.");
 	
 	$("#terminal-interior").animate({
 		top: -1 * $("#terminal-interior").height()
@@ -435,7 +438,7 @@ Failure = function()
 
 Success = function()
 {
-	UpdateOutput("Access granted.");
+	UpdateOutput("Accès autorisé.");
 
 	$("#terminal-interior").animate({
 		top: -1 * $("#terminal-interior").height()
@@ -445,7 +448,23 @@ Success = function()
 		complete : function()
 		{
 			//$("#terminal").html("<div id='adminalert'>" + Haikus[ Math.floor( Math.random() * Haikus.length ) ].toUpperCase() + "</div>");
-			$("#terminal").html("<div id='canvas'></div><div id='adminalert'><div id='msg' class='character-hover alert-text'>TERMINAL ACCESS GRANTED</div><br /><div onClick=\"location.href = 'https://breakout.bernis-hideout.de/pip-boy';return false;\" id='proceed' class='alert-text'>PRESS HERE TO PROCEED</div></div>");
+			var success = Number((simpleQueryString.parse(location.search).success || 0))
+			var message;
+			var next = 0;
+			if (success == 0) {
+				next = 1
+				message = "MAIS VOUS DEVEZ REUSSIR ENCORE 2 FOIS AVANT D'AVOIR L'INDICE";
+			} else if (success == 1) {
+				next = 666
+				message = "MAIS VOUS DEVEZ REUSSIR ENCORE 1 FOIS AVANT D'AVOIR L'INDICE";
+			} else if (success == 666) {
+				message = "FELICITATION - LE MOT INDICE EST 'ETOILE'";
+			} else {
+				message = "PETIT MALIN - CE N'EST PAS COMME CA QUE TU Y ARRIVERAS !";
+				next = 0
+			}
+			console.log(success) 
+			$("#terminal").html("<div id='canvas'></div><div id='adminalert'><div id='msg' class='character-hover alert-text'>BRAVO !</div><br /><div id='msg' class='character-hover alert-text'>" + message + "</div><br/><div onClick=\"location.href = '?success=" + (next) + "';return false;\" id='proceed' class='alert-text'>CLIQUER ICI POUR RECOMMENCER</div></div>");
 
 			var container = $("#canvas");
 			var canvasWidth = container.width();
@@ -494,6 +513,30 @@ Success = function()
 }
 
 CompareWords = function(first, second)
+{
+	if (first.length !== second.length)
+	{
+		return 0;
+	}
+	
+	first = first.toLowerCase().split('');
+	correct = second.toLowerCase().split('');
+	
+	var good = 0;
+	var i = 0;
+	while (i < first.length)
+	{
+		var index;
+		if ((index = correct.indexOf(first[i])) >= 0) {
+			correct.splice(index, 1)
+			good++;
+		}
+		i++;
+	}
+	return good;
+}
+
+CompareWordsInPlace = function(first, second)
 {
 	if (first.length !== second.length)
 	{

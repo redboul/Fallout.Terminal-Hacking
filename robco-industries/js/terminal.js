@@ -10,7 +10,7 @@
 var columnHeight = 17;
 var wordColumnWidth = 12;
 var Count = 12;
-var Difficulty = 7;
+var Difficulty = 6;
 var DudLength = 8;
 var Sound = true;
 var InfoText = "ROBCO INDUSTRIES (TM) TERMALINK PROTOCOL<br />ENTRER LE MOT DE PASSE";
@@ -463,7 +463,6 @@ Success = function()
 				message = "PETIT MALIN - CE N'EST PAS COMME CA QUE TU Y ARRIVERAS !";
 				next = 0
 			}
-			console.log(success) 
 			$("#terminal").html("<div id='canvas'></div><div id='adminalert'><div id='msg' class='character-hover alert-text'>BRAVO !</div><br /><div id='msg' class='character-hover alert-text'>" + message + "</div><br/><div onClick=\"location.href = '?success=" + (next) + "';return false;\" id='proceed' class='alert-text'>CLIQUER ICI POUR RECOMMENCER</div></div>");
 
 			var container = $("#canvas");
@@ -481,9 +480,9 @@ Success = function()
 
 			var geometry = new THREE.SphereGeometry( 2, 10, 7 );
 			var material = new THREE.MeshBasicMaterial({
-			      color : 0x33dd88,
-			      wireframe : true,
-			      wireframeLinewidth: 10
+			        color : 0x33dd88,
+			        wireframe : true,
+			      	wireframeLinewidth: 10
 			    });
 			var cube = new THREE.Mesh( geometry, material );
 			scene.add( cube );
